@@ -16,12 +16,14 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.slf4j.LoggerFactory
 import java.util.*
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TopologyUnitTest {
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val config = Properties()
     private val streamsConfiguration = StreamsConfiguration("test", "dummy:1234")
     private val recordFactory: ConsumerRecordFactory<Int, BiciMadStation>
@@ -40,7 +42,6 @@ class TopologyUnitTest {
 
     @BeforeEach
     fun initializeTestDriver() {
-
         stationsStore = testDriver.getKeyValueStore(STATIONS_STORE)
         stationsByNameStore = testDriver.getKeyValueStore(STATIONS_BY_NAME_STORE)
     }
