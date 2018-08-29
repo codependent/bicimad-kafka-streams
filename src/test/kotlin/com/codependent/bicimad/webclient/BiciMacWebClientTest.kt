@@ -2,8 +2,7 @@ package com.codependent.bicimad.webclient
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import org.assertj.core.api.Assertions
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
@@ -17,6 +16,7 @@ class BiciMacWebClientTest {
             "",
             ObjectMapper().registerModule(KotlinModule()))
 
+    @Disabled
     @Test
     fun testShouldGetStations() {
         val latch = CountDownLatch(1)

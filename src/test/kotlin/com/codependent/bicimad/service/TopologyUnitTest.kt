@@ -16,32 +16,29 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.slf4j.LoggerFactory
 import java.util.*
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TopologyUnitTest {
 
-    private val logger = LoggerFactory.getLogger(javaClass)
     private val config = Properties()
     private val streamsConfiguration = StreamsConfiguration("test", "dummy:1234")
     private val recordFactory: ConsumerRecordFactory<Int, BiciMadStation>
-    private val testDriver: TopologyTestDriver
-    private var stationsStore: KeyValueStore<Int, BiciMadStation>
-    private var stationsByNameStore: KeyValueStore<String, BiciMadStation>
+    private lateinit var testDriver: TopologyTestDriver
+    private lateinit var stationsStore: KeyValueStore<Int, BiciMadStation>
+    private lateinit var stationsByNameStore: KeyValueStore<String, BiciMadStation>
 
     init {
         config[StreamsConfig.APPLICATION_ID_CONFIG] = "test"
         config[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = "dummy:1234"
         recordFactory = ConsumerRecordFactory<Int, BiciMadStation>(STATIONS_TOPIC, IntegerSerializer(), JsonPojoSerializer<BiciMadStation>())
-        testDriver = TopologyTestDriver(streamsConfiguration.topology(), config)
-        stationsStore = testDriver.getKeyValueStore(STATIONS_STORE)
-        stationsByNameStore = testDriver.getKeyValueStore(STATIONS_BY_NAME_STORE)
+
     }
 
     @BeforeEach
     fun initializeTestDriver() {
+        testDriver = TopologyTestDriver(streamsConfiguration.topology(), config)
         stationsStore = testDriver.getKeyValueStore(STATIONS_STORE)
         stationsByNameStore = testDriver.getKeyValueStore(STATIONS_BY_NAME_STORE)
     }
