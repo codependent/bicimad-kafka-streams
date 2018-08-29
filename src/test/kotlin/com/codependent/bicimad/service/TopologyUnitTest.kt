@@ -1,18 +1,21 @@
 package com.codependent.bicimad.service
 
 import com.codependent.bicimad.dto.BiciMadStation
+import com.codependent.bicimad.dto.BiciMadStationStats
+import com.codependent.bicimad.serdes.JsonPojoDeserializer
 import com.codependent.bicimad.serdes.JsonPojoSerializer
-import com.codependent.bicimad.streams.STATIONS_BY_NAME_STORE
-import com.codependent.bicimad.streams.STATIONS_STORE
-import com.codependent.bicimad.streams.STATIONS_TOPIC
-import com.codependent.bicimad.streams.StreamsConfiguration
+import com.codependent.bicimad.streams.*
+import com.sun.xml.internal.ws.policy.AssertionSet
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.IntegerDeserializer
 import org.apache.kafka.common.serialization.IntegerSerializer
+import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.TopologyTestDriver
 import org.apache.kafka.streams.state.KeyValueStore
 import org.apache.kafka.streams.test.ConsumerRecordFactory
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -54,5 +57,22 @@ class TopologyUnitTest {
         testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
         assertEquals(station, stationsStore.get(1))
         assertEquals(station, stationsByNameStore.get("Puerta del Sol A"))
+    }
+
+    @Test
+    fun testShouldAlertLowCapacityStation() {
+        val station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 1, 23, 1)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
+        assertEquals(station, stationsStore.get(1))
+        assertEquals(station, stationsByNameStore.get("Puerta del Sol A"))
+
+        val station2 = BiciMadStation(2, "40.416896", "-4.7024255", "Puerta del Sol B", 1, "1a", "Puerta del Sol nº 20", 1, 0, 24, 22, 2, 1)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station2))
+
+        val output: ProducerRecord<Int, BiciMadStationStats> = testDriver.readOutput(STATIONS_LOW_CAPACITY_TOPIC, IntegerDeserializer(), JsonPojoDeserializer(BiciMadStationStats::class.java))
+        assertEquals(station.id, output.value().id)
+
+        val output2: ProducerRecord<Int, BiciMadStationStats> = testDriver.readOutput(STATIONS_LOW_CAPACITY_TOPIC, IntegerDeserializer(), JsonPojoDeserializer(BiciMadStationStats::class.java))
+        assertNull(output2.value())
     }
 }

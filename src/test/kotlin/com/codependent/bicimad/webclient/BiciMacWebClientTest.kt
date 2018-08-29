@@ -16,7 +16,6 @@ class BiciMacWebClientTest {
             "",
             ObjectMapper().registerModule(KotlinModule()))
 
-    @Disabled
     @Test
     fun testShouldGetStations() {
         val latch = CountDownLatch(1)

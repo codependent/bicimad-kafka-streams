@@ -1,6 +1,7 @@
 package com.codependent.bicimad.streams
 
 import com.codependent.bicimad.dto.BiciMadStation
+import com.codependent.bicimad.dto.BiciMadStationStats
 import com.codependent.bicimad.serdes.JsonPojoDeserializer
 import com.codependent.bicimad.serdes.JsonPojoSerializer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -12,6 +13,7 @@ import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Bytes
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.kstream.Materialized
+import org.apache.kafka.streams.kstream.Produced
 import org.apache.kafka.streams.kstream.Serialized
 import org.apache.kafka.streams.state.KeyValueStore
 import org.slf4j.LoggerFactory
@@ -23,6 +25,7 @@ import javax.annotation.PostConstruct
 import javax.annotation.PreDestroy
 
 const val STATIONS_TOPIC = "bicimad-stations"
+const val STATIONS_LOW_CAPACITY_TOPIC = "bicimad-low-capacity-stations"
 const val STATIONS_STORE = "bicimad-stations-store"
 const val STATIONS_BY_NAME_STORE = "bicimad-stations-by-name-store"
 
@@ -47,13 +50,22 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
     @Bean
     fun topology(): Topology {
         val stationSerde: Serde<BiciMadStation> = Serdes.serdeFrom(JsonPojoSerializer<BiciMadStation>(), JsonPojoDeserializer(BiciMadStation::class.java))
+        val stationStatsSerde: Serde<BiciMadStationStats> = Serdes.serdeFrom(JsonPojoSerializer<BiciMadStationStats>(), JsonPojoDeserializer(BiciMadStationStats::class.java))
         val builder = StreamsBuilder()
 
         val kStream = builder.stream(STATIONS_TOPIC, Consumed.with(Serdes.Integer(), stationSerde))
 
-        kStream.groupByKey().reduce({ _, newValue -> newValue }, Materialized.`as`<Int, BiciMadStation, KeyValueStore<Bytes, ByteArray>>(STATIONS_STORE)
-                .withKeySerde(Serdes.Integer())
-                .withValueSerde(stationSerde))
+        kStream.groupByKey().reduce({ _, newValue -> newValue },
+                Materialized.`as`<Int, BiciMadStation, KeyValueStore<Bytes, ByteArray>>(STATIONS_STORE)
+                        .withKeySerde(Serdes.Integer())
+                        .withValueSerde(stationSerde))
+                .filter { _, value -> (value.dockBikes * 100) / value.totalBases < 10 }
+                .mapValues { station ->
+                    BiciMadStationStats(station.id, station.latitude, station.longitude, station.name, station.dockBikes,
+                            station.freeBases, (station.dockBikes * 100) / station.totalBases)
+                }
+                .toStream().to(STATIONS_LOW_CAPACITY_TOPIC, Produced.with(Serdes.Integer(), stationStatsSerde))
+
 
         kStream.selectKey { _, value -> value.name }
                 .groupByKey(Serialized.with(Serdes.String(), stationSerde)).reduce({ _, newValue -> newValue },
