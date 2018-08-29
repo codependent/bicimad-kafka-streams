@@ -18,7 +18,7 @@ class BiciMacWebClientTest {
             ObjectMapper().registerModule(KotlinModule()))
 
     @Test
-    fun shouldGetStations() {
+    fun testShouldGetStations() {
         val latch = CountDownLatch(1)
         val stations = biciMadWebClient.getStations().log()
         stations
