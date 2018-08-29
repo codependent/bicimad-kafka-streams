@@ -12,6 +12,7 @@ import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Bytes
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.kstream.Materialized
+import org.apache.kafka.streams.kstream.Serialized
 import org.apache.kafka.streams.state.KeyValueStore
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -48,19 +49,18 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
         val stationSerde: Serde<BiciMadStation> = Serdes.serdeFrom(JsonPojoSerializer<BiciMadStation>(), JsonPojoDeserializer(BiciMadStation::class.java))
         val builder = StreamsBuilder()
 
+        val kStream = builder.stream(STATIONS_TOPIC, Consumed.with(Serdes.Integer(), stationSerde))
 
-        builder.table(STATIONS_TOPIC, Consumed.with(Serdes.Integer(), stationSerde),
-                Materialized.`as`<Int, BiciMadStation, KeyValueStore<Bytes, ByteArray>>(STATIONS_STORE)
-                        .withKeySerde(Serdes.Integer())
-                        .withValueSerde(stationSerde))
-/*
-        builder.stream(STATIONS_TOPIC, Consumed.with(Serdes.Integer(), stationSerde))
-                .selectKey { _, value -> value.name }
-                .groupByKey().reduce({ agg, newValue -> newValue },
+        kStream.groupByKey().reduce({ _, newValue -> newValue }, Materialized.`as`<Int, BiciMadStation, KeyValueStore<Bytes, ByteArray>>(STATIONS_STORE)
+                .withKeySerde(Serdes.Integer())
+                .withValueSerde(stationSerde))
+
+        kStream.selectKey { _, value -> value.name }
+                .groupByKey(Serialized.with(Serdes.String(), stationSerde)).reduce({ _, newValue -> newValue },
                         Materialized.`as`<String, BiciMadStation, KeyValueStore<Bytes, ByteArray>>(STATIONS_BY_NAME_STORE)
                                 .withKeySerde(Serdes.String())
                                 .withValueSerde(stationSerde))
-*/
+
         return builder.build()
     }
 
