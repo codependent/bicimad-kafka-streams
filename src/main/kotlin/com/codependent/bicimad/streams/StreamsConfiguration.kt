@@ -5,7 +5,6 @@ import com.codependent.bicimad.dto.BiciMadStationStats
 import com.codependent.bicimad.serdes.JsonPojoDeserializer
 import com.codependent.bicimad.serdes.JsonPojoSerializer
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.IntegerSerializer
 import org.apache.kafka.common.serialization.Serde
@@ -21,8 +20,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.util.*
-import javax.annotation.PostConstruct
-import javax.annotation.PreDestroy
 
 const val STATIONS_TOPIC = "bicimad-stations"
 const val STATIONS_LOW_CAPACITY_TOPIC = "bicimad-low-capacity-stations"
@@ -34,18 +31,6 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
                            @Value("\${kafka.boostrap-servers}") private val kafkaBootstrapServers: String) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
-
-    @PostConstruct
-    fun startStreams(kafkaStreams: KafkaStreams) {
-        kafkaStreams.start()
-    }
-
-    @PreDestroy
-    fun stopStreams(kafkaStreams: KafkaStreams, inventoryProducer: Producer<String, BiciMadStation>) {
-        logger.info("*********** Closing streams ***********")
-        inventoryProducer.close()
-        kafkaStreams.close()
-    }
 
     @Bean
     fun topology(): Topology {
@@ -59,10 +44,10 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
                 Materialized.`as`<Int, BiciMadStation, KeyValueStore<Bytes, ByteArray>>(STATIONS_STORE)
                         .withKeySerde(Serdes.Integer())
                         .withValueSerde(stationSerde))
-                .filter { _, value -> (value.dockBikes * 100) / value.totalBases < 10 }
+                .filter { _, value -> (value.dockBikes * 100.0) / value.totalBases < 10.0 }
                 .mapValues { station ->
                     BiciMadStationStats(station.id, station.latitude, station.longitude, station.name, station.dockBikes,
-                            station.freeBases, (station.dockBikes * 100) / station.totalBases)
+                            station.freeBases, (station.dockBikes * 100.0) / station.totalBases)
                 }
                 .toStream().to(STATIONS_LOW_CAPACITY_TOPIC, Produced.with(Serdes.Integer(), stationStatsSerde))
 
@@ -77,15 +62,15 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
     }
 
     @Bean
-    fun kafkaStreams(): KafkaStreams {
+    fun kafkaStreams(topology: Topology): KafkaStreams {
         val props = Properties()
         props[StreamsConfig.APPLICATION_ID_CONFIG] = applicationName
         props[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = kafkaBootstrapServers
-        return KafkaStreams(topology(), props)
+        return KafkaStreams(topology, props)
     }
 
     @Bean
-    fun stationProducer(): Producer<Int, BiciMadStation> {
+    fun stationProducer(): KafkaProducer<Int, BiciMadStation> {
         val props = Properties()
         props[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafkaBootstrapServers
         props[ProducerConfig.CLIENT_ID_CONFIG] = "InventoryService"
