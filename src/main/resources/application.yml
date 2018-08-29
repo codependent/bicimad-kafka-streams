@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: bicimad-microservice
+
+kafka:
+  boostrap-servers: localhost:9092
+
+bicimad:
+  url: https://rbdata.emtmadrid.es:8443/BiciMad
+  code: xxx
+  passkey: xxx
+
+logging:
+  level:
+    org.apache.kafka: info
