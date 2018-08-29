@@ -12,8 +12,8 @@ class BiciMacWebClientTest {
 
     private val biciMadWebClient = BiciMadWebClient(
             "https://rbdata.emtmadrid.es:8443/BiciMad",
-            "WEB.SERV.joseantonio.inigo@gmail.com",
-            "A28B9528-6795-4C9F-993D-2B8AF39C899C",
+            "",
+            "",
             ObjectMapper().registerModule(KotlinModule()))
 
     @Test
