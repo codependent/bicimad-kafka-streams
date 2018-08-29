@@ -26,6 +26,7 @@ class TopologyUnitTest {
     private val recordFactory: ConsumerRecordFactory<Int, BiciMadStation>
     private lateinit var testDriver: TopologyTestDriver
     private lateinit var stationsStore: KeyValueStore<Int, BiciMadStation>
+    private lateinit var stationsByNameStore: KeyValueStore<String, BiciMadStation>
 
     init {
         config[StreamsConfig.APPLICATION_ID_CONFIG] = "test"
@@ -38,6 +39,7 @@ class TopologyUnitTest {
     fun initializeTestDriver() {
         testDriver = TopologyTestDriver(streamsConfiguration.topology(), config)
         stationsStore = testDriver.getKeyValueStore(STATIONS_STORE)
+        stationsByNameStore = testDriver.getKeyValueStore(STATIONS_BY_NAME_STORE)
     }
 
     @AfterEach
@@ -50,5 +52,7 @@ class TopologyUnitTest {
         val station = BiciMadStation(1,"40.416896","-3.7024255","Puerta del Sol A",1,"1a","Puerta del Sol nº 1",1,0,24,16,5,1)
         testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
         assertEquals(station, stationsStore.get(1))
+        assertEquals(station, stationsByNameStore.get("Puerta del Sol A"))
+
     }
 }
