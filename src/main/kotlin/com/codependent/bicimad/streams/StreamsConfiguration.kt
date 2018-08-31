@@ -61,7 +61,8 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
 
 
         kStream.selectKey { _, value -> value.name }
-                .groupByKey(Serialized.with(Serdes.String(), stationSerde)).reduce({ _, newValue -> newValue },
+                .groupByKey(Serialized.with(Serdes.String(), stationSerde))
+                .reduce({ _, newValue -> newValue },
                         Materialized.`as`<String, BiciMadStation, KeyValueStore<Bytes, ByteArray>>(STATIONS_BY_NAME_STORE)
                                 .withKeySerde(Serdes.String())
                                 .withValueSerde(stationSerde))
