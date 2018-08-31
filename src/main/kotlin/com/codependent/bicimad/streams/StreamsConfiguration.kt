@@ -82,7 +82,9 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
                     (netChange / totalCapacity.toDouble()) * 100.0
                 }.toStream { key, _ -> key.key() }.to(STATIONS_TURNOVER_TOPIC, Produced.with(Serdes.Integer(), Serdes.Double()))
 
-        return builder.build()
+        val topology = builder.build()
+        logger.info("{}", topology.describe())
+        return topology
     }
 
     @Bean
