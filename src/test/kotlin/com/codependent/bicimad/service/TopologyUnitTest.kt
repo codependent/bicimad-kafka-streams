@@ -6,6 +6,7 @@ import com.codependent.bicimad.serdes.JsonPojoDeserializer
 import com.codependent.bicimad.serdes.JsonPojoSerializer
 import com.codependent.bicimad.streams.*
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.DoubleDeserializer
 import org.apache.kafka.common.serialization.IntegerDeserializer
 import org.apache.kafka.common.serialization.IntegerSerializer
 import org.apache.kafka.streams.StreamsConfig
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -71,7 +73,35 @@ class TopologyUnitTest {
         val output: ProducerRecord<Int, BiciMadStationStats> = testDriver.readOutput(STATIONS_LOW_CAPACITY_TOPIC, IntegerDeserializer(), JsonPojoDeserializer(BiciMadStationStats::class.java))
         assertEquals(station.id, output.value().id)
 
-        val output2: ProducerRecord<Int, BiciMadStationStats> = testDriver.readOutput(STATIONS_LOW_CAPACITY_TOPIC, IntegerDeserializer(), JsonPojoDeserializer(BiciMadStationStats::class.java))
-        assertNull(output2.value())
+        val output2: ProducerRecord<Int, BiciMadStationStats>? = testDriver.readOutput(STATIONS_LOW_CAPACITY_TOPIC, IntegerDeserializer(), JsonPojoDeserializer(BiciMadStationStats::class.java))
+        assertNull(output2)
+    }
+
+    @Test
+    fun testShouldNotifyTurnoverInformation() {
+        var station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 24, 0, 0)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
+        station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 12, 12, 0)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
+        station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 24, 0, 0)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
+        station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 0, 24, 0)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
+
+        /*testDriver.advanceWallClockTime(TimeUnit.MINUTES.toMillis(90))
+        station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 0, 24, 0)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))*/
+
+
+        var output = testDriver.readOutput(STATIONS_TURNOVER_TOPIC, IntegerDeserializer(), DoubleDeserializer())
+        assertEquals(0.0, output.value())
+        output = testDriver.readOutput(STATIONS_TURNOVER_TOPIC, IntegerDeserializer(), DoubleDeserializer())
+        assertEquals(50.0, output.value())
+        output = testDriver.readOutput(STATIONS_TURNOVER_TOPIC, IntegerDeserializer(), DoubleDeserializer())
+        assertEquals(100.0, output.value())
+        output = testDriver.readOutput(STATIONS_TURNOVER_TOPIC, IntegerDeserializer(), DoubleDeserializer())
+        assertEquals(200.0, output.value())
+        /*output = testDriver.readOutput(STATIONS_TURNOVER_TOPIC, IntegerDeserializer(), DoubleDeserializer())
+        assertEquals(0.0, output.value())*/
     }
 }

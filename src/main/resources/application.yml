@@ -7,8 +7,8 @@ kafka:
 
 bicimad:
   url: https://rbdata.emtmadrid.es:8443/BiciMad
-  code: xxx
-  passkey: xxx
+  code: WEB.SERV.joseantonio.inigo@gmail.com
+  passkey: A28B9528-6795-4C9F-993D-2B8AF39C899C
 
 logging:
   level:
