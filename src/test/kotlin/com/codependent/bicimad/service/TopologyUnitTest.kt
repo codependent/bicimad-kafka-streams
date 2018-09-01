@@ -20,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -31,6 +30,7 @@ class TopologyUnitTest {
     private val recordFactory: ConsumerRecordFactory<Int, BiciMadStation>
     private lateinit var testDriver: TopologyTestDriver
     private lateinit var stationsStore: KeyValueStore<Int, BiciMadStation>
+    private lateinit var stationCapacityStore: KeyValueStore<Int, Double>
     private lateinit var stationsByNameStore: KeyValueStore<String, BiciMadStation>
 
     init {
@@ -44,6 +44,7 @@ class TopologyUnitTest {
     fun initializeTestDriver() {
         testDriver = TopologyTestDriver(streamsConfiguration.topology(), config)
         stationsStore = testDriver.getKeyValueStore(STATIONS_STORE)
+        stationCapacityStore = testDriver.getKeyValueStore(STATIONS_CAPACITY_STORE)
         stationsByNameStore = testDriver.getKeyValueStore(STATIONS_BY_NAME_STORE)
     }
 
@@ -75,6 +76,22 @@ class TopologyUnitTest {
 
         val output2: ProducerRecord<Int, BiciMadStationStats>? = testDriver.readOutput(STATIONS_LOW_CAPACITY_TOPIC, IntegerDeserializer(), JsonPojoDeserializer(BiciMadStationStats::class.java))
         assertNull(output2)
+    }
+
+    @Test
+    fun testShouldGetCurrentStationsCapacity() {
+        var station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 12, 12, 0)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
+        assertEquals(50.0, stationCapacityStore.get(1))
+
+        station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 24, 0, 0)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
+        assertEquals(100.0, stationCapacityStore.get(1))
+
+        station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 0, 24, 0)
+        testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
+        assertEquals(0.0, stationCapacityStore.get(1))
+
     }
 
     @Test

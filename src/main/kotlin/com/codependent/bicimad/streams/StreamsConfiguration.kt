@@ -28,6 +28,7 @@ const val STATIONS_TOPIC = "bicimad-stations"
 const val STATIONS_LOW_CAPACITY_TOPIC = "bicimad-low-capacity-stations"
 const val STATIONS_TURNOVER_TOPIC = "bicimad-station-turnover"
 const val STATIONS_STORE = "bicimad-stations-store"
+const val STATIONS_CAPACITY_STORE = "bicimad-stations-capacity-store"
 const val STATIONS_BY_NAME_STORE = "bicimad-stations-by-name-store"
 
 @Configuration
@@ -59,6 +60,12 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
                 .peek { key, value -> logger.info("Low capacity station: $key - $value") }
                 .to(STATIONS_LOW_CAPACITY_TOPIC, Produced.with(Serdes.Integer(), stationStatsSerde))
 
+        kStream.mapValues { station -> station.dockBikes * 100.0 / station.totalBases }
+                .groupByKey(Serialized.with(Serdes.Integer(), Serdes.Double()))
+                .reduce({ _, newValue -> newValue },
+                        Materialized.`as`<Int, Double, KeyValueStore<Bytes, ByteArray>>(STATIONS_CAPACITY_STORE)
+                                .withKeySerde(Serdes.Integer())
+                                .withValueSerde(Serdes.Double()))
 
         kStream.selectKey { _, value -> value.name }
                 .groupByKey(Serialized.with(Serdes.String(), stationSerde))
