@@ -41,7 +41,7 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
     fun topology(): Topology {
         val stationSerde: Serde<BiciMadStation> = Serdes.serdeFrom(JsonPojoSerializer<BiciMadStation>(), JsonPojoDeserializer(BiciMadStation::class.java))
         val stationStatsSerde: Serde<BiciMadStationStats> = Serdes.serdeFrom(JsonPojoSerializer<BiciMadStationStats>(), JsonPojoDeserializer(BiciMadStationStats::class.java))
-        val bikeAvailabilityAggregation: Serde<BikeAvailabilityAggregation> = Serdes.serdeFrom(JsonPojoSerializer<BikeAvailabilityAggregation>(), JsonPojoDeserializer(BikeAvailabilityAggregation::class.java))
+        val bikeAvailabilityAggregationSerde: Serde<BikeAvailabilityAggregation> = Serdes.serdeFrom(JsonPojoSerializer<BikeAvailabilityAggregation>(), JsonPojoDeserializer(BikeAvailabilityAggregation::class.java))
 
         val builder = StreamsBuilder()
 
@@ -83,7 +83,7 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
                             val previouslyAvailableBikes = if (aggregate.previousValue == -1) availableBikes else aggregate.previousValue
                             val difference = Math.abs(availableBikes - previouslyAvailableBikes)
                             BikeAvailabilityAggregation(station.dockBikes, aggregate.netChange + difference, station.totalBases)
-                        }, Materialized.with(Serdes.Integer(), bikeAvailabilityAggregation))
+                        }, Materialized.with(Serdes.Integer(), bikeAvailabilityAggregationSerde))
                 .mapValues { key, agg ->
                     val totalCapacity = agg.totalCapacity
                     val netChange = agg.netChange
