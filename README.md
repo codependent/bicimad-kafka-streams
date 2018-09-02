@@ -4,6 +4,8 @@
 
 Kafka Streams used to track BiciMAD usage
 
-Topology:
+## Topology:
+
+The diagram below illustrates the whole processing topology of the application.
 
 ![Topology](https://raw.githubusercontent.com/codependent/bicimad-kafka-streams/master/topology.png)
