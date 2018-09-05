@@ -11,11 +11,11 @@ import org.apache.kafka.common.serialization.IntegerSerializer
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Bytes
-import org.apache.kafka.streams.*
-import org.apache.kafka.streams.kstream.Materialized
-import org.apache.kafka.streams.kstream.Produced
-import org.apache.kafka.streams.kstream.Serialized
-import org.apache.kafka.streams.kstream.TimeWindows
+import org.apache.kafka.streams.KafkaStreams
+import org.apache.kafka.streams.StreamsBuilder
+import org.apache.kafka.streams.StreamsConfig
+import org.apache.kafka.streams.Topology
+import org.apache.kafka.streams.kstream.*
 import org.apache.kafka.streams.state.KeyValueStore
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -84,7 +84,7 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
                             val difference = Math.abs(availableBikes - previouslyAvailableBikes)
                             BikeAvailabilityAggregation(station.dockBikes, aggregate.netChange + difference, station.totalBases)
                         }, Materialized.with(Serdes.Integer(), bikeAvailabilityAggregationSerde))
-                .mapValues { key, agg ->
+                .mapValues { _, agg ->
                     val totalCapacity = agg.totalCapacity
                     val netChange = agg.netChange
                     (netChange / totalCapacity.toDouble()) * 100.0
