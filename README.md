@@ -20,9 +20,9 @@ from the [emtmadrid.es registration website](https://opendata.emtmadrid.es/Formu
 
 3. Start the microservice as a normal Spring Boot application
 
-4. Check the status of the different topics:
+4. Check the status of the different topics and stores, updated every minute:
 
-For instance, example of bicimad-low-capacity-stations topic:
+For instance, example of `bicimad-low-capacity-stations` topic:
 
 ```
 /opt/apache/kafka_2.11-2.0.0/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
