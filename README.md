@@ -6,7 +6,7 @@ Kafka Streams used to track BiciMAD usage
 
 ## Instructions
 
-1. Configure BiciMAD key/secret properties (`bicimad.key`, `bicimad.passcode`) with values gotten
+1. Configure BiciMAD key/secret properties (`bicimad.code`, `bicimad.passkey`) with values gotten
 from the [emtmadrid.es registration website](https://opendata.emtmadrid.es/Formulario.aspx). 
 
 2. Start Kafka:
