@@ -54,7 +54,7 @@ class TopologyUnitTest {
     }
 
     @Test
-    fun testShouldAddStationsToStore() {
+    fun testShouldAddStationToStore() {
         val station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 16, 5, 1)
         testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
         assertEquals(station, stationsStore.get(1))
@@ -79,7 +79,7 @@ class TopologyUnitTest {
     }
 
     @Test
-    fun testShouldGetCurrentStationsCapacity() {
+    fun testShouldGetUpdatedStationCapacity() {
         var station = BiciMadStation(1, "40.416896", "-3.7024255", "Puerta del Sol A", 1, "1a", "Puerta del Sol nº 1", 1, 0, 24, 12, 12, 0)
         testDriver.pipeInput(recordFactory.create(STATIONS_TOPIC, 1, station))
         assertEquals(50.0, stationCapacityStore.get(1))
