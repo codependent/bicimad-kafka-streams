@@ -62,7 +62,7 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
 
         kStream.mapValues { station -> station.dockBikes * 100.0 / station.totalBases }
                 .groupByKey(Serialized.with(Serdes.Integer(), Serdes.Double()))
-                .reduce({ _, station -> station },
+                .reduce({ _, availabilityPercentage -> availabilityPercentage },
                         Materialized.`as`<Int, Double, KeyValueStore<Bytes, ByteArray>>(STATIONS_CAPACITY_STORE)
                                 .withKeySerde(Serdes.Integer())
                                 .withValueSerde(Serdes.Double()))
