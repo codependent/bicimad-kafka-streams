@@ -47,29 +47,29 @@ class StreamsConfiguration(@Value("\${spring.application.name}") private val app
 
         val kStream = builder.stream(STATIONS_TOPIC, Consumed.with(Serdes.Integer(), stationSerde))
 
-        kStream.groupByKey().reduce({ _, newValue -> newValue },
+        kStream.groupByKey().reduce({ _, station -> station },
                 Materialized.`as`<Int, BiciMadStation, KeyValueStore<Bytes, ByteArray>>(STATIONS_STORE)
                         .withKeySerde(Serdes.Integer())
                         .withValueSerde(stationSerde))
                 .toStream()
-                .filter { _, value -> (value.dockBikes * 100.0) / value.totalBases < 10.0 }
+                .filter { _, station -> (station.dockBikes * 100.0) / station.totalBases < 10.0 }
                 .mapValues { station ->
                     BiciMadStationStats(station.id, station.latitude, station.longitude, station.name, station.dockBikes,
                             station.freeBases, (station.dockBikes * 100.0) / station.totalBases)
                 }
-                .peek { key, value -> logger.info("Low capacity station: $key - $value") }
+                .peek { key, station -> logger.info("Low capacity station: $key - $station") }
                 .to(STATIONS_LOW_CAPACITY_TOPIC, Produced.with(Serdes.Integer(), stationStatsSerde))
 
         kStream.mapValues { station -> station.dockBikes * 100.0 / station.totalBases }
                 .groupByKey(Serialized.with(Serdes.Integer(), Serdes.Double()))
-                .reduce({ _, newValue -> newValue },
+                .reduce({ _, station -> station },
                         Materialized.`as`<Int, Double, KeyValueStore<Bytes, ByteArray>>(STATIONS_CAPACITY_STORE)
                                 .withKeySerde(Serdes.Integer())
                                 .withValueSerde(Serdes.Double()))
 
-        kStream.selectKey { _, value -> value.name }
+        kStream.selectKey { _, station -> station.name }
                 .groupByKey(Serialized.with(Serdes.String(), stationSerde))
-                .reduce({ _, newValue -> newValue },
+                .reduce({ _, station -> station },
                         Materialized.`as`<String, BiciMadStation, KeyValueStore<Bytes, ByteArray>>(STATIONS_BY_NAME_STORE)
                                 .withKeySerde(Serdes.String())
                                 .withValueSerde(stationSerde))
