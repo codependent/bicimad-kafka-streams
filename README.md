@@ -38,6 +38,13 @@ For instance, example of a `bicimad-low-capacity-stations` topic consumer:
 ...
 ```
 
+
+## Produced topics and stores
+
+There are resulting topics and stores with the different metrics and views of the data:
+
+![Topics and stores](https://raw.githubusercontent.com/codependent/bicimad-kafka-streams/master/ksapp.png)
+
 ## Topology:
 
 The diagram below illustrates the whole processing topology of the application.
