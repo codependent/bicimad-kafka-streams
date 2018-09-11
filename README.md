@@ -37,8 +37,6 @@ For instance, example of a `bicimad-low-capacity-stations` topic consumer:
 11	{"id":11,"latitude":"40.4250863","longitude":"-3.6918807","name":"Marqués de la Ensenada","dock_bikes":0,"free_bases":24,"availabilityPercentage":0.0}
 ...
 ```
-
-
 ## Produced topics and stores
 
 There are resulting topics and stores with the different metrics and views of the data:
