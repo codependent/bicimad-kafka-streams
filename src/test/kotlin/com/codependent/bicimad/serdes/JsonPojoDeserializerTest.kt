@@ -1,6 +1,7 @@
 package com.codependent.bicimad.serdes
 
 import com.codependent.bicimad.dto.BiciMadStation
+import org.apache.kafka.common.errors.SerializationException
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -12,5 +13,12 @@ class JsonPojoDeserializerTest {
         val biciMadStation = jsonPojoDeserializer.deserialize("", "{\"id\":1,\"latitude\":\"40.416896\",\"longitude\":\"-3.7024255\",\"name\":\"Puerta del Sol A\",\"light\":1,\"number\":\"1a\",\"address\":\"Puerta del Sol nº 1\",\"activate\":1,\"no_available\":0,\"total_bases\":24,\"dock_bikes\":16,\"free_bases\":5,\"reservations_count\":1}".toByteArray())
 
         Assertions.assertEquals(station, biciMadStation)
+    }
+
+    @Test
+    fun deserializeKO() {
+        val jsonPojoDeserializer = JsonPojoDeserializer(BiciMadStation::class.java)
+
+        Assertions.assertThrows(SerializationException::class.java) { jsonPojoDeserializer.deserialize("", "nomecorrespondo".toByteArray()) }
     }
 }
