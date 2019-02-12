@@ -2,7 +2,7 @@ package com.codependent.bicimad.serdes
 
 import com.codependent.bicimad.dto.BiciMadStation
 import org.apache.kafka.common.errors.SerializationException
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class JsonPojoDeserializerTest {
@@ -27,13 +27,13 @@ class JsonPojoDeserializerTest {
    "reservations_count":1
 }""".toByteArray())
 
-        Assertions.assertEquals(station, biciMadStation)
+        assertEquals(station, biciMadStation)
     }
 
     @Test
     fun deserializeKO() {
         val jsonPojoDeserializer = JsonPojoDeserializer(BiciMadStation::class.java)
 
-        Assertions.assertThrows(SerializationException::class.java) { jsonPojoDeserializer.deserialize("", "nomecorrespondo".toByteArray()) }
+        assertThrows(SerializationException::class.java) { jsonPojoDeserializer.deserialize("", "nomecorrespondo".toByteArray()) }
     }
 }

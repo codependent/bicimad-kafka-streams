@@ -7,14 +7,14 @@ import com.codependent.bicimad.webclient.BiciMadWebClient
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
+import org.mockito.Mockito.*
 
 import org.mockito.BDDMockito.given
 import reactor.core.publisher.Mono
 
 class BiciMadStationInfoTimerTest {
-    private val biciMadWebClient = Mockito.mock(BiciMadWebClient::class.java)
-    private val stationProducer = Mockito.mock(Producer::class.java) as Producer<Int, BiciMadStation>
+    private val biciMadWebClient = mock(BiciMadWebClient::class.java)
+    private val stationProducer = mock(Producer::class.java) as Producer<Int, BiciMadStation>
     private val biciMadStationInfoTimer = BiciMadStationInfoTimer(biciMadWebClient, stationProducer)
 
     @Test
@@ -25,6 +25,6 @@ class BiciMadStationInfoTimerTest {
         given(biciMadWebClient.getStations()).willReturn(biciMadStations)
         biciMadStationInfoTimer.scheduleGetStations()
 
-        Mockito.verify(stationProducer).send(ProducerRecord(STATIONS_TOPIC, station.id, station))
+        verify(stationProducer).send(ProducerRecord(STATIONS_TOPIC, station.id, station))
     }
 }
