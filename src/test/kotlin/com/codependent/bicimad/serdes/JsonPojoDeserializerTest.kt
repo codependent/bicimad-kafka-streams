@@ -2,7 +2,8 @@ package com.codependent.bicimad.serdes
 
 import com.codependent.bicimad.dto.BiciMadStation
 import org.apache.kafka.common.errors.SerializationException
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class JsonPojoDeserializerTest {

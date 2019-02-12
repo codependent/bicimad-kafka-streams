@@ -15,8 +15,8 @@ class BiciMadStationInfoTimer(private val biciMadWebClient: BiciMadWebClient, pr
     fun scheduleGetStations() {
         biciMadWebClient.getStations()
                 .subscribe {
-                    it.stations.forEach {
-                        stationProducer.send(ProducerRecord(STATIONS_TOPIC, it.id, it))
+                    it.stations.forEach { station ->
+                        stationProducer.send(ProducerRecord(STATIONS_TOPIC, station.id, station))
                     }
                 }
     }
